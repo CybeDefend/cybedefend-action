@@ -1,0 +1,26 @@
+name: 'CybeDefend Action'
+description: 'Run security scans with CybeDefend directly in your GitHub Actions workflows'
+author: 'CybeDefend'
+inputs:
+  api-key:
+    description: 'API Key for CybeDefend'
+    required: true
+  project-id:
+    description: 'Project ID for the scan'
+    required: true
+  dir:
+    description: 'Directory to scan'
+    required: false
+  file:
+    description: 'Zip file to scan'
+    required: false
+  ci:
+    description: 'Enable CI/CD-friendly output'
+    required: false
+    default: 'true'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: 'shield'
+  color: 'blue'
