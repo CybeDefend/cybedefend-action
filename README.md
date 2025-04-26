@@ -13,7 +13,6 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
   with:
     api-key: ${{ secrets.CYBEDEFEND_API_KEY }}
     project-id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
-    dir: ./your-project-directory
 ```
 
 ## Inputs
@@ -21,10 +20,7 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 | Name | Description | Required | Default |
 |:---|:---|:---|:---|
 | `api-key` | API Key for authentication | ✅ | |
-| `project-id` | Project ID for the scan | ✅ | |
-| `dir` | Directory to scan | ❌ | |
-| `file` | Pre-zipped file to scan | ❌ | |
-| `ci` | Enable CI/CD friendly output (no colors, ASCII art) | ❌ | `true` |
+| `project-id` | Project ID for the scan | ✅ | 
 
 ## Example Workflow
 
@@ -48,5 +44,3 @@ jobs:
         with:
           api-key: ${{ secrets.CYBEDEFEND_API_KEY }}
           project-id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
-          dir: ./
-          
