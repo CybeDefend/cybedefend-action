@@ -2,10 +2,10 @@ name: 'CybeDefend Action'
 description: 'Run security scans with CybeDefend directly in your GitHub Actions workflows'
 author: 'CybeDefend'
 inputs:
-  api-key:
-    description: 'API Key for CybeDefend'
+  api_key:
+    description: 'API Key of the CybeDefend account'
     required: true
-  project-id:
+  project_id:
     description: 'Project ID for the scan'
     required: true
 runs:
