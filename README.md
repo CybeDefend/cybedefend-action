@@ -11,16 +11,16 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 ```yaml
 - uses: CybeDefend/cybedefend-action@v1
   with:
-    api-key: ${{ secrets.CYBEDEFEND_API_KEY }}
-    project-id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
+    api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+    project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
 ```
 
 ## Inputs
 
 | Name | Description | Required | Default |
 |:---|:---|:---|:---|
-| `api-key` | API Key for authentication | ✅ | |
-| `project-id` | Project ID for the scan | ✅ | 
+| `api_key` | API Key for authentication | ✅ | |
+| `project_id` | Project ID for the scan | ✅ | 
 
 ## Example Workflow
 
@@ -42,5 +42,5 @@ jobs:
       - name: Run CybeDefend Security Scan
         uses: CybeDefend/cybedefend-action@v1
         with:
-          api-key: ${{ secrets.CYBEDEFEND_API_KEY }}
-          project-id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
+          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
