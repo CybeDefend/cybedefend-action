@@ -8,6 +8,22 @@ inputs:
   project_id:
     description: 'Project ID for the scan'
     required: true
+  wait:
+    description: 'Wait for scan completion'
+    required: false
+    default: 'true'
+  interval:
+    description: 'Interval in seconds between status checks when waiting for scan completion'
+    required: false
+    default: '5'
+  break_on_fail:
+    description: 'Exit with error code if scan fails'
+    required: false
+    default: 'false'
+  break_on_severity:
+    description: 'Exit with error code if vulnerabilities of specified severity or above are detected (critical, high, medium, low, none)'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
