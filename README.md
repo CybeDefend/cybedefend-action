@@ -4,7 +4,7 @@
 
 Run security scans easily in your CI/CD pipelines using the official CybeDefend CLI, powered by Docker.
 
-This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:latest](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
+This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v1.0.5](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
 
 ## Usage
 
@@ -25,6 +25,8 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 | `interval` | Interval in seconds between status checks | ❌ | `5` |
 | `break_on_fail` | Exit with error code if scan fails | ❌ | `false` |
 | `break_on_severity` | Exit with error code if vulnerabilities of specified severity or above are detected (critical, high, medium, low, none) | ❌ | `` |
+| `region` | Region for API endpoints (`us` or `eu`). Ignored if `api_url` is set. | ❌ | `` |
+| `api_url` | Custom API base URL (overrides region). | ❌ | `` |
 
 ## Example Workflow
 
@@ -50,6 +52,7 @@ jobs:
         with:
           api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
+          region: us
 ```
 
 ### Advanced Scan with CI/CD Breaking
@@ -77,4 +80,11 @@ jobs:
           break_on_fail: true
           break_on_severity: high
           interval: 10
+          # api_url takes precedence over region when both are provided
+          api_url: https://api-us.cybedefend.com
+
+## Notes
+
+- Default API endpoint is `https://api-us.cybedefend.com`. Use `region: eu` to target the EU endpoint, or set a custom `api_url`.
+- URL precedence: `--api-url` > `CYBEDEFEND_API_URL` > config `api_url` > value derived from region.
 ```

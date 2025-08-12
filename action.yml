@@ -24,6 +24,14 @@ inputs:
     description: 'Exit with error code if vulnerabilities of specified severity or above are detected (critical, high, medium, low, none)'
     required: false
     default: ''
+  region:
+    description: 'Region to use for API endpoints (us, eu). Sets CYBEDEFEND_REGION and is ignored if api_url is provided.'
+    required: false
+    default: ''
+  api_url:
+    description: 'Custom API base URL. Takes precedence over region and environment variables.'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
