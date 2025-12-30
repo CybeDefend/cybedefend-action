@@ -32,6 +32,10 @@ inputs:
     description: 'Custom API base URL. Takes precedence over region and environment variables.'
     required: false
     default: ''
+  branch:
+    description: 'Branch name to associate with the scan (e.g., main, develop, feature/my-feature)'
+    required: true
+    default: 'main'
 runs:
   using: 'docker'
   image: 'Dockerfile'

@@ -37,4 +37,8 @@ if [ -n "${INPUT_BREAK_ON_SEVERITY}" ]; then
   CMD="${CMD} --break-on-severity ${INPUT_BREAK_ON_SEVERITY}"
 fi
 
+if [ -n "${INPUT_BRANCH}" ]; then
+  CMD="${CMD} --branch ${INPUT_BRANCH}"
+fi
+
 exec ${CMD}
