@@ -36,6 +36,22 @@ inputs:
     description: 'Branch name to associate with the scan (e.g., main, develop, feature/my-feature)'
     required: true
     default: 'main'
+  policy_check:
+    description: 'Enable/disable policy evaluation after scan'
+    required: false
+    default: 'true'
+  policy_timeout:
+    description: 'Timeout in seconds for policy evaluation'
+    required: false
+    default: '300'
+  show_policy_vulns:
+    description: 'Show affected vulnerabilities in policy evaluation output'
+    required: false
+    default: 'true'
+  show_all_policy_vulns:
+    description: 'Show all affected vulnerabilities without limit (default shows max 5 per violation)'
+    required: false
+    default: 'false'
 runs:
   using: 'docker'
   image: 'Dockerfile'

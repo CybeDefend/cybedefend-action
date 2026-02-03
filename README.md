@@ -4,7 +4,7 @@
 
 Run security scans easily in your CI/CD pipelines using the official CybeDefend CLI, powered by Docker.
 
-This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v1.0.8](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
+This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v1.0.10](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
 
 ## Usage
 
@@ -28,6 +28,10 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 | `region` | Region for API endpoints (`us` or `eu`). Ignored if `api_url` is set. | ❌ | `` |
 | `api_url` | Custom API base URL (overrides region). | ❌ | `` |
 | `branch` | Branch name to associate with the scan (e.g., `main`, `develop`, `feature/my-feature`) | ✅ | `main` |
+| `policy_check` | Enable/disable policy evaluation after scan | ❌ | `true` |
+| `policy_timeout` | Timeout in seconds for policy evaluation | ❌ | `300` |
+| `show_policy_vulns` | Show affected vulnerabilities in policy evaluation output | ❌ | `true` |
+| `show_all_policy_vulns` | Show all affected vulnerabilities without limit | ❌ | `false` |
 
 ## Example Workflow
 
@@ -117,8 +121,67 @@ jobs:
           branch: ${{ github.head_ref || github.ref_name }}
 ```
 
+### Scan with Policy Evaluation
+
+```yaml
+name: CybeDefend Security Scan with Policy Enforcement
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run CybeDefend Security Scan
+        uses: CybeDefend/cybedefend-action@v1
+        with:
+          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
+          branch: ${{ github.head_ref || github.ref_name }}
+          # Policy evaluation options
+          policy_check: true
+          policy_timeout: 300
+          show_policy_vulns: true
+          show_all_policy_vulns: false
+```
+
+### Scan without Policy Evaluation
+
+```yaml
+name: CybeDefend Security Scan (No Policy Check)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run CybeDefend Security Scan
+        uses: CybeDefend/cybedefend-action@v1
+        with:
+          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
+          branch: ${{ github.ref_name }}
+          policy_check: false
+```
+
 ## Notes
 
 - Default API endpoint is `https://api-us.cybedefend.com`. Use `region: eu` to target the EU endpoint, or set a custom `api_url`.
 - URL precedence: `--api-url` > `CYBEDEFEND_API_URL` > config `api_url` > value derived from region.
-```
+- **Policy Evaluation**: Enabled by default in v1.0.9. If any policy has a BLOCK action with violations, the action will exit with code 1. Use `policy_check: false` to disable.

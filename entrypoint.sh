@@ -41,4 +41,20 @@ if [ -n "${INPUT_BRANCH}" ]; then
   CMD="${CMD} --branch ${INPUT_BRANCH}"
 fi
 
+if [ "${INPUT_POLICY_CHECK}" = "false" ]; then
+  CMD="${CMD} --policy-check=false"
+fi
+
+if [ -n "${INPUT_POLICY_TIMEOUT}" ]; then
+  CMD="${CMD} --policy-timeout ${INPUT_POLICY_TIMEOUT}"
+fi
+
+if [ "${INPUT_SHOW_POLICY_VULNS}" = "false" ]; then
+  CMD="${CMD} --show-policy-vulns=false"
+fi
+
+if [ "${INPUT_SHOW_ALL_POLICY_VULNS}" = "true" ]; then
+  CMD="${CMD} --show-all-policy-vulns"
+fi
+
 exec ${CMD}
