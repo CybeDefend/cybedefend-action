@@ -2,8 +2,8 @@ name: 'CybeDefend Action'
 description: 'Run security scans with CybeDefend directly in your GitHub Actions workflows'
 author: 'CybeDefend'
 inputs:
-  api_key:
-    description: 'API Key of the CybeDefend account'
+  pat:
+    description: 'Personal Access Token (PAT) — create one in Account Settings → Personal Access Tokens'
     required: true
   project_id:
     description: 'Project ID for the scan'

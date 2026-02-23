@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-export CYBEDEFEND_API_KEY="${INPUT_API_KEY}"
+export CYBEDEFEND_PAT="${INPUT_PAT}"
 export CYBEDEFEND_PROJECT_ID="${INPUT_PROJECT_ID}"
 
 # Only export optional env vars when provided to avoid overriding pre-set values

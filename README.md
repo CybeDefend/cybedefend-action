@@ -4,14 +4,14 @@
 
 Run security scans easily in your CI/CD pipelines using the official CybeDefend CLI, powered by Docker.
 
-This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v1.0.10](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
+This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v2.0.0](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
 
 ## Usage
 
 ```yaml
-- uses: CybeDefend/cybedefend-action@v1
+- uses: CybeDefend/cybedefend-action@v2
   with:
-    api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+    pat: ${{ secrets.CYBEDEFEND_PAT }}
     project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
 ```
 
@@ -19,7 +19,7 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 
 | Name | Description | Required | Default |
 |:---|:---|:---|:---|
-| `api_key` | API Key for authentication | ✅ | |
+| `pat` | Personal Access Token (PAT) | ✅ | |
 | `project_id` | Project ID for the scan | ✅ | |
 | `wait` | Wait for scan completion | ❌ | `true` |
 | `interval` | Interval in seconds between status checks | ❌ | `5` |
@@ -53,9 +53,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run CybeDefend Security Scan
-        uses: CybeDefend/cybedefend-action@v1
+        uses: CybeDefend/cybedefend-action@v2
         with:
-          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          pat: ${{ secrets.CYBEDEFEND_PAT }}
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
           region: us
           branch: ${{ github.ref_name }}
@@ -79,9 +79,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run CybeDefend Security Scan
-        uses: CybeDefend/cybedefend-action@v1
+        uses: CybeDefend/cybedefend-action@v2
         with:
-          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          pat: ${{ secrets.CYBEDEFEND_PAT }}
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
           break_on_fail: true
           break_on_severity: high
@@ -114,9 +114,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run CybeDefend Security Scan
-        uses: CybeDefend/cybedefend-action@v1
+        uses: CybeDefend/cybedefend-action@v2
         with:
-          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          pat: ${{ secrets.CYBEDEFEND_PAT }}
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
           branch: ${{ github.head_ref || github.ref_name }}
 ```
@@ -142,9 +142,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run CybeDefend Security Scan
-        uses: CybeDefend/cybedefend-action@v1
+        uses: CybeDefend/cybedefend-action@v2
         with:
-          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          pat: ${{ secrets.CYBEDEFEND_PAT }}
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
           branch: ${{ github.head_ref || github.ref_name }}
           # Policy evaluation options
@@ -172,9 +172,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run CybeDefend Security Scan
-        uses: CybeDefend/cybedefend-action@v1
+        uses: CybeDefend/cybedefend-action@v2
         with:
-          api_key: ${{ secrets.CYBEDEFEND_API_KEY }}
+          pat: ${{ secrets.CYBEDEFEND_PAT }}
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
           branch: ${{ github.ref_name }}
           policy_check: false
@@ -185,3 +185,4 @@ jobs:
 - Default API endpoint is `https://api-us.cybedefend.com`. Use `region: eu` to target the EU endpoint, or set a custom `api_url`.
 - URL precedence: `--api-url` > `CYBEDEFEND_API_URL` > config `api_url` > value derived from region.
 - **Policy Evaluation**: Enabled by default in v1.0.9. If any policy has a BLOCK action with violations, the action will exit with code 1. Use `policy_check: false` to disable.
+- **Breaking in v2**: `api_key` input has been replaced by `pat`. API key authentication is no longer supported by the CybeDefend API.
