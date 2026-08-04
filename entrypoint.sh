@@ -57,4 +57,17 @@ if [ "${INPUT_SHOW_ALL_POLICY_VULNS}" = "true" ]; then
   CMD="${CMD} --show-all-policy-vulns"
 fi
 
+# Test hook (tests/entrypoint.bats): print the exact argv the CLI would receive,
+# one element per line, instead of running it. Never set in normal action usage.
+# `set -- ${CMD}` is deliberately unquoted so that it reproduces, exactly, the
+# field splitting and pathname expansion performed by `exec ${CMD}` below.
+if [ -n "${CYBEDEFEND_ACTION_DRY_RUN}" ]; then
+  # shellcheck disable=SC2086
+  set -- ${CMD}
+  for arg in "$@"; do
+    printf '%s\n' "${arg}"
+  done
+  exit 0
+fi
+
 exec ${CMD}
