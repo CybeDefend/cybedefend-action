@@ -13,6 +13,8 @@
 
 setup() {
   ENTRYPOINT="${ENTRYPOINT:-$BATS_TEST_DIRNAME/../entrypoint.sh}"
+  # Override to exercise another POSIX shell, e.g. SH=/bin/dash bats tests/
+  SH="${SH:-/bin/sh}"
 
   # Stand in for the checked-out third-party repository the action scans:
   # attacker-chosen filenames live here, so an unquoted expansion would turn
@@ -36,7 +38,7 @@ run_entrypoint() {
     INPUT_PAT=pat-secret \
     INPUT_PROJECT_ID=11111111-2222-3333-4444-555555555555 \
     "$@" \
-    /bin/sh "$ENTRYPOINT"
+    "$SH" "$ENTRYPOINT"
 }
 
 assert_ok() {

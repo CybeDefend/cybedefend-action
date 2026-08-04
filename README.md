@@ -26,7 +26,7 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 | `break_on_fail` | Exit with error code if scan fails | ❌ | `false` |
 | `break_on_severity` | Exit with error code if vulnerabilities of specified severity or above are detected (critical, high, medium, low, none) | ❌ | `` |
 | `region` | Region for API endpoints (`us` or `eu`). Ignored if `api_url` is set. | ❌ | `` |
-| `api_url` | Custom API base URL (overrides region). | ❌ | `` |
+| `api_url` | Custom API base URL, **https only** (overrides region). | ❌ | `` |
 | `branch` | Branch name to associate with the scan (e.g., `main`, `develop`, `feature/my-feature`) | ✅ | `main` |
 | `policy_check` | Enable/disable policy evaluation after scan | ❌ | `true` |
 | `policy_timeout` | Timeout in seconds for policy evaluation | ❌ | `300` |
@@ -178,6 +178,41 @@ jobs:
           project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
           branch: ${{ github.ref_name }}
           policy_check: false
+```
+
+## Input validation
+
+Inputs are frequently wired from event data (`github.head_ref` on a pull request
+is controlled by the PR author), so the entrypoint treats every input as
+untrusted:
+
+- The CLI is invoked with **positional parameters**, so one input is always
+  exactly one argument — a value containing spaces, tabs, `*` or a leading `-`
+  can never turn into extra CLI flags, and never expands against the filenames
+  of the repository being scanned.
+- Inputs with a documented domain are checked before the scan starts, and the
+  action fails with a clear message instead of passing the value through:
+
+  | Input | Accepted |
+  |:---|:---|
+  | `api_url` | `https://` + a plain host (optional port and path). No other scheme, no embedded credentials (`user@host`), no whitespace |
+  | `region` | `us`, `eu` |
+  | `break_on_severity` | `critical`, `high`, `medium`, `low`, `none` |
+  | `interval`, `policy_timeout` | digits only (seconds) |
+
+  `api_url` is the value that decides which host receives your `pat`, which is
+  why `http://` is rejected outright.
+
+- `wait`, `break_on_fail`, `policy_check`, `show_policy_vulns` and
+  `show_all_policy_vulns` act only on their documented value; anything else
+  falls back to the default.
+
+Tests live in [`tests/entrypoint.bats`](tests/entrypoint.bats) and run in CI
+against both `dash` and `bash`:
+
+```bash
+bats tests/
+shellcheck --shell=sh entrypoint.sh
 ```
 
 ## Notes
