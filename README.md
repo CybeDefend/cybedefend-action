@@ -27,6 +27,7 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 | `break_on_severity` | Exit with error code if vulnerabilities of specified severity or above are detected (critical, high, medium, low, none) | ❌ | `` |
 | `region` | Region for API endpoints (`us` or `eu`). Ignored if `api_url` is set. | ❌ | `` |
 | `api_url` | Custom API base URL, **https only** (overrides region). | ❌ | `` |
+| `auth_url` | Custom auth endpoint, **https only**. Needed with `api_url` when the target is not the `us` or `eu` region. | ❌ | `` |
 | `branch` | Branch name to associate with the scan (e.g., `main`, `develop`, `feature/my-feature`) | ✅ | `main` |
 | `policy_check` | Enable/disable policy evaluation after scan | ❌ | `true` |
 | `policy_timeout` | Timeout in seconds for policy evaluation | ❌ | `300` |
@@ -261,7 +262,7 @@ untrusted:
 
   | Input | Accepted |
   |:---|:---|
-  | `api_url` | `https://` + a plain host (optional port and path). No other scheme, no embedded credentials (`user@host`), no whitespace |
+  | `api_url`, `auth_url` | `https://` + a plain host (optional port and path). No other scheme, no embedded credentials (`user@host`), no whitespace |
   | `region` | `us`, `eu` |
   | `break_on_severity` | `critical`, `high`, `medium`, `low`, `none` |
   | `interval`, `policy_timeout` | digits only (seconds) |
@@ -269,8 +270,9 @@ untrusted:
   | `report_type` | `all`, `sast`, `sca`, `iac`, `secret`, `cicd`, `container` |
   | `report_filename` | a plain file name: letters, digits, `.`, `_`, `-`. No `/`, no `..`, no leading `-` |
 
-  `api_url` is the value that decides which host receives your `pat`, which is
-  why `http://` is rejected outright. `report_filename` is written inside the
+  `api_url` decides which host receives your `pat` and `auth_url` decides which
+  host that `pat` is exchanged with, which is why `http://` is rejected outright
+  for both. `report_filename` is written inside the
   workspace, so a path separator or a `..` is refused rather than allowed to
   place a file elsewhere on the runner.
 
@@ -289,6 +291,15 @@ shellcheck --shell=sh entrypoint.sh
 ## Notes
 
 - Default API endpoint is `https://api-us.cybedefend.com`. Use `region: eu` to target the EU endpoint, or set a custom `api_url`.
+- **Targeting a deployment that is not `us` or `eu`** (self-hosted, or any other instance): set `auth_url` alongside `api_url`. The CLI derives its auth endpoint from the region, which says nothing about such a deployment, so without `auth_url` the token exchange is sent to the wrong auth server and fails with `invalid_grant`. The client id and the token audience are discovered from `api_url` automatically (CLI v2.0.5 and later).
+
+  ```yaml
+        with:
+          pat: ${{ secrets.CYBEDEFEND_PAT }}
+          project_id: ${{ secrets.CYBEDEFEND_PROJECT_ID }}
+          api_url: https://api.your-instance.example
+          auth_url: https://auth.your-instance.example
+  ```
 - URL precedence: `--api-url` > `CYBEDEFEND_API_URL` > config `api_url` > value derived from region.
 - **Policy Evaluation**: Enabled by default in v1.0.9. If any policy has a BLOCK action with violations, the action will exit with code 1. Use `policy_check: false` to disable.
 - **Report export**: `report_format` defaults to `none`, so the action behaves exactly as before unless a report is asked for. The export runs the same CLI the scan ran, from the same image, against the same host — no second Docker invocation and no CLI version to keep in sync in your workflow.

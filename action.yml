@@ -32,6 +32,10 @@ inputs:
     description: 'Custom API base URL, https only (e.g. https://api-eu.cybedefend.com). Takes precedence over region and environment variables.'
     required: false
     default: ''
+  auth_url:
+    description: 'Custom auth endpoint URL, https only (e.g. https://auth-eu.cybedefend.com). Required alongside api_url when targeting a deployment that is not the us or eu region, whose auth server cannot be derived from the region.'
+    required: false
+    default: ''
   branch:
     description: 'Branch name to associate with the scan (e.g., main, develop, feature/my-feature)'
     required: true
