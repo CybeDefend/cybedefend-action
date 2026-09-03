@@ -52,6 +52,23 @@ inputs:
     description: 'Show all affected vulnerabilities without limit (default shows max 5 per violation)'
     required: false
     default: 'false'
+  report_format:
+    description: 'Report to export after the scan (none, sarif, json, html, markdown). Use sarif to feed github/codeql-action/upload-sarif.'
+    required: false
+    default: 'none'
+  report_type:
+    description: 'Scan types to include in the report (all, sast, sca, iac, secret, cicd, container)'
+    required: false
+    default: 'all'
+  report_filename:
+    description: 'Report file name, written into the workspace. Defaults to cybedefend-results.<ext> for the chosen format. Must be a plain file name, without a path.'
+    required: false
+    default: ''
+outputs:
+  report_file:
+    description: 'Path of the exported report, relative to the workspace — ready to hand to upload-sarif or upload-artifact. Only set when report_format is not none and the export succeeded.'
+  report_format:
+    description: 'Format actually exported, for conditional steps'
 runs:
   using: 'docker'
   image: 'Dockerfile'
