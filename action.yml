@@ -29,7 +29,7 @@ inputs:
     required: false
     default: ''
   api_url:
-    description: 'Custom API base URL. Takes precedence over region and environment variables.'
+    description: 'Custom API base URL, https only (e.g. https://api-eu.cybedefend.com). Takes precedence over region and environment variables.'
     required: false
     default: ''
   branch:
