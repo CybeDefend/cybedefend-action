@@ -498,3 +498,65 @@ assert_no_step_output() {
   assert_rejected report_format
   assert_no_step_output
 }
+
+# --- auth_url ---------------------------------------------------------------
+#
+# The CLI derives its auth endpoint from the region. A deployment that is not
+# one of the two regions needs it named explicitly, and it has to reach both
+# commands or the export authenticates somewhere else than the scan did.
+
+@test "auth_url is forwarded to the scan" {
+  run_entrypoint INPUT_BRANCH=main \
+    INPUT_API_URL=https://api.instance.example \
+    INPUT_AUTH_URL=https://auth.instance.example
+  assert_ok
+  assert_argv /app/cybedefend scan --ci --dir . \
+    --api-url https://api.instance.example \
+    --auth-endpoint https://auth.instance.example \
+    --branch main
+}
+
+@test "auth_url reaches the results export too" {
+  run_entrypoint INPUT_BRANCH=main INPUT_REPORT_FORMAT=sarif \
+    INPUT_API_URL=https://api.instance.example \
+    INPUT_AUTH_URL=https://auth.instance.example
+  assert_ok
+  assert_argv /app/cybedefend scan --ci --dir . \
+    --api-url https://api.instance.example \
+    --auth-endpoint https://auth.instance.example \
+    --branch main \
+    "$RESULTS_MARKER" \
+    /app/cybedefend results --ci \
+    --api-url https://api.instance.example \
+    --auth-endpoint https://auth.instance.example \
+    --project-id 11111111-2222-3333-4444-555555555555 \
+    --branch main \
+    --type all \
+    --output sarif \
+    --filepath "$WORKDIR" \
+    --filename cybedefend-results.sarif
+}
+
+@test "auth_url is usable on its own, without api_url" {
+  run_entrypoint INPUT_BRANCH=main INPUT_AUTH_URL=https://auth.instance.example
+  assert_ok
+  assert_argv /app/cybedefend scan --ci --dir . \
+    --auth-endpoint https://auth.instance.example --branch main
+}
+
+@test "auth_url is validated like api_url: it receives the PAT exchange" {
+  run_entrypoint INPUT_BRANCH=main INPUT_AUTH_URL=http://auth.instance.example
+  assert_rejected auth_url
+}
+
+@test "auth_url with embedded credentials is rejected" {
+  run_entrypoint INPUT_BRANCH=main \
+    INPUT_AUTH_URL=https://auth-us.cybedefend.com@evil.tld
+  assert_rejected auth_url
+}
+
+@test "auth_url cannot smuggle a second argument" {
+  run_entrypoint INPUT_BRANCH=main \
+    INPUT_AUTH_URL='https://auth.instance.example --pat leak'
+  assert_rejected auth_url
+}

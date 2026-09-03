@@ -27,30 +27,33 @@ fail() {
   exit 1
 }
 
-# api_url decides which host receives CYBEDEFEND_PAT, so it is the one value
-# whose validation directly protects a credential: require an https:// URL with
-# a plain host — no other scheme, no embedded credentials, no whitespace and no
-# shell or glob metacharacters.
-validate_api_url() {
-  case "$1" in
+# validate_url <input name> <value>
+#
+# api_url decides which host receives CYBEDEFEND_PAT and auth_url decides which
+# host the PAT is exchanged with, so these two are the values whose validation
+# directly protects a credential: require an https:// URL with a plain host — no
+# other scheme, no embedded credentials, no whitespace and no shell or glob
+# metacharacters.
+validate_url() {
+  case "$2" in
   https://*) ;;
   *)
-    fail "api_url must use the https:// scheme (got: '$1')"
+    fail "$1 must use the https:// scheme (got: '$2')"
     ;;
   esac
 
-  _rest="${1#https://}"
+  _rest="${2#https://}"
   _host="${_rest%%/*}"
   case "$_host" in
   '' | *[!A-Za-z0-9.:-]*)
-    fail "api_url must have a plain host, optionally with a port (got: '$1')"
+    fail "$1 must have a plain host, optionally with a port (got: '$2')"
     ;;
   esac
 
   _path="${_rest#"$_host"}"
   case "$_path" in
   *[!A-Za-z0-9._~/%-]*)
-    fail "api_url path contains unsupported characters (got: '$1')"
+    fail "$1 path contains unsupported characters (got: '$2')"
     ;;
   esac
 }
@@ -116,7 +119,10 @@ if [ -n "${INPUT_REGION}" ]; then
   validate_enum region "${INPUT_REGION}" us eu
 fi
 if [ -n "${INPUT_API_URL}" ]; then
-  validate_api_url "${INPUT_API_URL}"
+  validate_url api_url "${INPUT_API_URL}"
+fi
+if [ -n "${INPUT_AUTH_URL}" ]; then
+  validate_url auth_url "${INPUT_AUTH_URL}"
 fi
 if [ -n "${INPUT_INTERVAL}" ]; then
   validate_seconds interval "${INPUT_INTERVAL}"
@@ -150,6 +156,9 @@ fi
 if [ -n "${INPUT_API_URL}" ]; then
   export CYBEDEFEND_API_URL="${INPUT_API_URL}"
 fi
+if [ -n "${INPUT_AUTH_URL}" ]; then
+  export CYBEDEFEND_AUTH_ENDPOINT="${INPUT_AUTH_URL}"
+fi
 
 # The command is assembled as positional parameters: one input, one argv
 # element, whatever the input contains.
@@ -160,6 +169,13 @@ if [ -n "${INPUT_API_URL}" ]; then
   set -- "$@" --api-url "${INPUT_API_URL}"
 elif [ -n "${INPUT_REGION}" ]; then
   set -- "$@" --region "${INPUT_REGION}"
+fi
+
+# The CLI derives its auth endpoint from the region, so a deployment that is
+# not one of the two regions has none to derive. Naming it explicitly is the
+# only way to authenticate against such an instance.
+if [ -n "${INPUT_AUTH_URL}" ]; then
+  set -- "$@" --auth-endpoint "${INPUT_AUTH_URL}"
 fi
 
 if [ "${INPUT_WAIT}" = "false" ]; then
@@ -231,6 +247,9 @@ if [ "${report_format}" != none ]; then
     set -- "$@" --api-url "${INPUT_API_URL}"
   elif [ -n "${INPUT_REGION}" ]; then
     set -- "$@" --region "${INPUT_REGION}"
+  fi
+  if [ -n "${INPUT_AUTH_URL}" ]; then
+    set -- "$@" --auth-endpoint "${INPUT_AUTH_URL}"
   fi
 
   set -- "$@" --project-id "${INPUT_PROJECT_ID}"
