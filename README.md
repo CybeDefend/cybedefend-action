@@ -4,7 +4,7 @@
 
 Run security scans easily in your CI/CD pipelines using the official CybeDefend CLI, powered by Docker.
 
-This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v2.0.4](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
+This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v2.0.5](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
 
 ## Usage
 
