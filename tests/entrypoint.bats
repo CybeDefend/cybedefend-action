@@ -560,3 +560,29 @@ assert_no_step_output() {
     INPUT_AUTH_URL='https://auth.instance.example --pat leak'
   assert_rejected auth_url
 }
+
+# --- debug -------------------------------------------------------------------
+#
+# The CLI's debug line names the credential source, the endpoints, the client
+# application and the token resource. Without a way to turn it on from a
+# workflow, an authentication failure in CI can only be guessed at.
+
+@test "debug turns on the CLI's diagnostics on both commands" {
+  run_entrypoint INPUT_BRANCH=main INPUT_DEBUG=true INPUT_REPORT_FORMAT=sarif
+  assert_ok
+  assert_argv /app/cybedefend scan --ci --debug --dir . --branch main \
+    "$RESULTS_MARKER" \
+    /app/cybedefend results --ci --debug \
+    --project-id 11111111-2222-3333-4444-555555555555 \
+    --branch main \
+    --type all \
+    --output sarif \
+    --filepath "$WORKDIR" \
+    --filename cybedefend-results.sarif
+}
+
+@test "debug only acts on its documented value" {
+  run_entrypoint INPUT_BRANCH=main INPUT_DEBUG=yes
+  assert_ok
+  assert_argv /app/cybedefend scan --ci --dir . --branch main
+}

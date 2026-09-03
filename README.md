@@ -4,7 +4,7 @@
 
 Run security scans easily in your CI/CD pipelines using the official CybeDefend CLI, powered by Docker.
 
-This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v2.0.5](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
+This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-cli) via the Docker image [ghcr.io/cybedefend/cybedefend-cli:v2.0.6](https://github.com/CybeDefend/cybedefend-cli/pkgs/container/cybedefend-cli).
 
 ## Usage
 
@@ -36,6 +36,7 @@ This action uses the [CybeDefend CLI](https://github.com/CybeDefend/cybedefend-c
 | `report_format` | Report to export after the scan (`none`, `sarif`, `json`, `html`, `markdown`) | ❌ | `none` |
 | `report_type` | Scan types to include in the report (`all`, `sast`, `sca`, `iac`, `secret`, `cicd`, `container`) | ❌ | `all` |
 | `report_filename` | Report file name, written into the workspace. Must be a plain file name, without a path. | ❌ | `cybedefend-results.<ext>` |
+| `debug` | Print the CLI diagnostics (credential source, endpoints, client application, token resource). Use it when authentication fails in CI. | ❌ | `false` |
 
 ## Outputs
 

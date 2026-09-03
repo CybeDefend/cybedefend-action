@@ -162,7 +162,16 @@ fi
 
 # The command is assembled as positional parameters: one input, one argv
 # element, whatever the input contains.
-set -- /app/cybedefend scan --ci --dir .
+set -- /app/cybedefend scan --ci
+
+# The CLI's debug line names the credential source, the endpoints, the client
+# application and the token resource — the values an authentication failure in
+# CI otherwise leaves to guesswork.
+if [ "${INPUT_DEBUG}" = "true" ]; then
+  set -- "$@" --debug
+fi
+
+set -- "$@" --dir .
 
 # Precedence: --api-url > env CYBEDEFEND_API_URL > --region > env CYBEDEFEND_REGION
 if [ -n "${INPUT_API_URL}" ]; then
@@ -239,6 +248,9 @@ if [ "${report_format}" != none ]; then
 
   # Same argv discipline as the scan: one input, one element.
   set -- /app/cybedefend results --ci
+  if [ "${INPUT_DEBUG}" = "true" ]; then
+    set -- "$@" --debug
+  fi
 
   # The export must reach the host the scan reached: the CLI's --api-url
   # defaults to the US region, so an EU scan would otherwise report from the
