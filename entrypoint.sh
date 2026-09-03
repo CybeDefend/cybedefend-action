@@ -10,8 +10,14 @@
 #      `exec "$@"` — never as a command string expanded unquoted, which would
 #      field-split and glob-expand every value (CWE-88 argument injection);
 #   2. inputs with a domain documented in action.yml (api_url, region,
-#      break_on_severity, interval, policy_timeout) are checked against that
-#      domain and fail closed with a clear message.
+#      break_on_severity, interval, policy_timeout, report_format, report_type,
+#      report_filename) are checked against that domain and fail closed with a
+#      clear message.
+#
+# The action runs up to two commands: the scan, then — when report_format asks
+# for one — a `results` export. The scan is therefore no longer exec'd: its
+# exit code has to outlive the export, because a failing break_on_severity gate
+# is exactly when the findings are wanted.
 #
 # See tests/entrypoint.bats.
 set -e
@@ -71,6 +77,41 @@ validate_seconds() {
   esac
 }
 
+# validate_filename <input name> <value>
+#
+# The report is written with --filepath pointing at the workspace, so the name
+# must stay a plain file name: a separator or a '..' would place the file
+# somewhere else on the runner, and a leading dash would read as a CLI flag.
+validate_filename() {
+  case "$2" in
+  -*)
+    fail "$1 must not start with '-' (got: '$2')"
+    ;;
+  */* | *..*)
+    fail "$1 must be a plain file name, without a path (got: '$2')"
+    ;;
+  '' | *[!A-Za-z0-9._-]*)
+    fail "$1 must only contain letters, digits, '.', '_' and '-' (got: '$2')"
+    ;;
+  esac
+}
+
+# report_extension <format> — the extension each consumer expects.
+report_extension() {
+  case "$1" in
+  markdown) printf 'md' ;;
+  *) printf '%s' "$1" ;;
+  esac
+}
+
+# print_argv — one element per line, so a value that was field-split or
+# glob-expanded shows up as extra lines.
+print_argv() {
+  for _arg in "$@"; do
+    printf '%s\n' "${_arg}"
+  done
+}
+
 if [ -n "${INPUT_REGION}" ]; then
   validate_enum region "${INPUT_REGION}" us eu
 fi
@@ -86,6 +127,17 @@ if [ -n "${INPUT_BREAK_ON_SEVERITY}" ]; then
 fi
 if [ -n "${INPUT_POLICY_TIMEOUT}" ]; then
   validate_seconds policy_timeout "${INPUT_POLICY_TIMEOUT}"
+fi
+if [ -n "${INPUT_REPORT_FORMAT}" ]; then
+  validate_enum report_format "${INPUT_REPORT_FORMAT}" \
+    none sarif json html markdown
+fi
+if [ -n "${INPUT_REPORT_TYPE}" ]; then
+  validate_enum report_type "${INPUT_REPORT_TYPE}" \
+    all sast sca iac secret cicd container
+fi
+if [ -n "${INPUT_REPORT_FILENAME}" ]; then
+  validate_filename report_filename "${INPUT_REPORT_FILENAME}"
 fi
 
 export CYBEDEFEND_PAT="${INPUT_PAT}"
@@ -146,13 +198,81 @@ if [ "${INPUT_SHOW_ALL_POLICY_VULNS}" = "true" ]; then
   set -- "$@" --show-all-policy-vulns
 fi
 
-# Test hook (tests/entrypoint.bats): print the exact argv the CLI would receive,
-# one element per line, instead of running it. Never set in normal action usage.
+# Test hook (tests/entrypoint.bats): print the exact argv each command would
+# receive, one element per line, instead of running it, and take the scan's
+# exit code from CYBEDEFEND_ACTION_DRY_RUN_SCAN_EXIT so the control flow around
+# a failing gate stays testable. Never set in normal action usage.
 if [ -n "${CYBEDEFEND_ACTION_DRY_RUN}" ]; then
-  for arg in "$@"; do
-    printf '%s\n' "${arg}"
-  done
-  exit 0
+  print_argv "$@"
+  scan_exit="${CYBEDEFEND_ACTION_DRY_RUN_SCAN_EXIT:-0}"
+else
+  set +e
+  "$@"
+  scan_exit=$?
+  set -e
 fi
 
-exec "$@"
+report_format="${INPUT_REPORT_FORMAT:-none}"
+
+if [ "${report_format}" != none ]; then
+  report_type="${INPUT_REPORT_TYPE:-all}"
+  report_filename="${INPUT_REPORT_FILENAME:-cybedefend-results.$(report_extension "${report_format}")}"
+  # In a Docker action the workspace is mounted at $GITHUB_WORKSPACE; the report
+  # has to land there to be visible to the steps that follow.
+  report_dir="${GITHUB_WORKSPACE:-.}"
+
+  # Same argv discipline as the scan: one input, one element.
+  set -- /app/cybedefend results --ci
+
+  # The export must reach the host the scan reached: the CLI's --api-url
+  # defaults to the US region, so an EU scan would otherwise report from the
+  # wrong place.
+  if [ -n "${INPUT_API_URL}" ]; then
+    set -- "$@" --api-url "${INPUT_API_URL}"
+  elif [ -n "${INPUT_REGION}" ]; then
+    set -- "$@" --region "${INPUT_REGION}"
+  fi
+
+  set -- "$@" --project-id "${INPUT_PROJECT_ID}"
+
+  # --branch defaults to every branch in the CLI, so leaving it out would
+  # export results the scan never produced.
+  if [ -n "${INPUT_BRANCH}" ]; then
+    set -- "$@" --branch "${INPUT_BRANCH}"
+  fi
+
+  set -- "$@" \
+    --type "${report_type}" \
+    --output "${report_format}" \
+    --filepath "${report_dir}" \
+    --filename "${report_filename}"
+
+  # A failed export must not turn a passing scan into a failing job.
+  if [ -n "${CYBEDEFEND_ACTION_DRY_RUN}" ]; then
+    printf '=== results ===\n'
+    print_argv "$@"
+    export_ok=yes
+  elif "$@"; then
+    export_ok=yes
+  else
+    export_ok=no
+    printf '::warning::CybeDefend report export failed; the scan result is unaffected\n'
+  fi
+
+  if [ "${export_ok}" = yes ]; then
+    # A Docker action runs as root, so the report lands in the workspace owned
+    # by root: make it readable by whatever post-processes it later.
+    if [ -f "${report_dir}/${report_filename}" ]; then
+      chmod a+r "${report_dir}/${report_filename}"
+    fi
+
+    # Relative on purpose: the steps that consume this run on the runner, where
+    # the container's workspace path does not exist.
+    if [ -n "${GITHUB_OUTPUT}" ]; then
+      printf 'report_file=%s\n' "${report_filename}" >>"${GITHUB_OUTPUT}"
+      printf 'report_format=%s\n' "${report_format}" >>"${GITHUB_OUTPUT}"
+    fi
+  fi
+fi
+
+exit "${scan_exit}"
