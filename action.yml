@@ -29,11 +29,11 @@ inputs:
     required: false
     default: ''
   api_url:
-    description: 'Custom API base URL, https only (e.g. https://api-eu.cybedefend.com). Takes precedence over region and environment variables.'
+    description: 'Custom API base URL, https only (e.g. https://api.cybedefend.internal). Takes precedence over region and environment variables. On CybeDefend cloud prefer region, which resolves this address for you.'
     required: false
     default: ''
   auth_url:
-    description: 'Custom auth endpoint URL, https only (e.g. https://auth-eu.cybedefend.com). Required alongside api_url when targeting a deployment that is not the us or eu region, whose auth server cannot be derived from the region.'
+    description: 'Self-hosted deployments only. Auth endpoint URL of your own instance, https only (e.g. https://auth.cybedefend.internal), set alongside api_url. On CybeDefend cloud use region instead: it resolves the API and auth addresses for you, and setting auth_url there can only get them out of step.'
     required: false
     default: ''
   branch:
