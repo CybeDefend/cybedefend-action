@@ -68,15 +68,15 @@ inputs:
     description: 'Report file name, written into the workspace. Defaults to cybedefend-results.<ext> for the chosen format. Must be a plain file name, without a path.'
     required: false
     default: ''
+  debug:
+    description: 'Print the CLI diagnostics: the credential source, the API and auth endpoints, the client application and the token resource. Turn this on when authentication fails in CI.'
+    required: false
+    default: 'false'
 outputs:
   report_file:
     description: 'Path of the exported report, relative to the workspace — ready to hand to upload-sarif or upload-artifact. Only set when report_format is not none and the export succeeded.'
   report_format:
     description: 'Format actually exported, for conditional steps'
-  debug:
-    description: 'Print the CLI diagnostics: the credential source, the API and auth endpoints, the client application and the token resource. Turn this on when authentication fails in CI.'
-    required: false
-    default: 'false'
 runs:
   using: 'docker'
   image: 'Dockerfile'
