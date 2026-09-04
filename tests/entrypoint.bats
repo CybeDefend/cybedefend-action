@@ -586,3 +586,30 @@ assert_no_step_output() {
   assert_ok
   assert_argv /app/cybedefend scan --ci --dir . --branch main
 }
+
+# --- action.yml contract -----------------------------------------------------
+
+@test "every input the entrypoint reads is declared in action.yml" {
+  # A value the entrypoint consumes but action.yml does not declare is rejected
+  # by GitHub before the action ever runs ("Invalid action input"). The tests
+  # above set INPUT_* directly, so they cannot see that: only action.yml can.
+  local manifest="$BATS_TEST_DIRNAME/../action.yml"
+  local entrypoint="$BATS_TEST_DIRNAME/../entrypoint.sh"
+
+  declared="$(awk '/^inputs:/{f=1;next} /^[a-z]/{f=0} f && /^  [a-z_]+:/{gsub(/[ :]/,"");print}' "$manifest" | sort)"
+  used="$(grep -o 'INPUT_[A-Z_]*' "$entrypoint" | sed 's/^INPUT_//' | tr 'A-Z' 'a-z' | sort -u)"
+
+  missing=""
+  for name in $used; do
+    case "$(printf '%s\n' "$declared")" in
+    *"$name"*) ;;
+    *) missing="$missing $name" ;;
+    esac
+  done
+
+  if [ -n "$missing" ]; then
+    printf 'entrypoint.sh reads inputs action.yml does not declare:%s\ndeclared:\n%s\n' \
+      "$missing" "$declared" >&2
+    false
+  fi
+}
